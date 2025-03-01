@@ -1,3 +1,6 @@
+require(rjags)
+require(nimble)
+require(coda)
 #--------------------------------------------------------------------------#
 #' Covariate-Dependent Variance for the Linear Dirichlet Dependent Mixture Model
 #--------------------------------------------------------------------------#
@@ -34,11 +37,6 @@
 #' \item{z_samples}{Matrix of posterior samples for latent component assignments \code{z}.}
 lddp_var <- function(y, X, prior, nburn = 1000, niter = 5000, thin = 1, n_chains = 1, 
                  adapt_steps = 1000, seed = 123) {
-  # Library
-  if (!requireNamespace("rjags", quietly = TRUE)) {
-    stop("The 'rjags' package is required but not installed.")
-  }
-  require(rjags)
   # model
   lddp_model <- "
     model {
@@ -51,17 +49,6 @@ lddp_var <- function(y, X, prior, nburn = 1000, niter = 5000, thin = 1, n_chains
         gamma[l, 1:P] ~ dmnorm(agamma[], bgamma[,])
       }
       abeta[1:P] ~ dmnorm(amu[], b2mu[,])
-      # for (i in 1:P) {
-      #     psi_adj[i, i] <- psi[i, i] + 1e-6
-      # }
-      # # ensures positive definite matrix, adding a regularization term.
-      # for (i in 1:P) {
-      #     for (j in (i+1):P) {
-      #         psi_adj[i, j] <- psi[i, j]
-      #         psi_adj[j, i] <- psi[j, i]
-      #     }
-      # }
-      # Sigmainv[1:P, 1:P] ~ dwish(nu * psi_adj[, ], nu)
       Sigmainv[1:P, 1:P] ~ dwish(nu * psi[, ], nu)
       
       # Stick breaking construction
