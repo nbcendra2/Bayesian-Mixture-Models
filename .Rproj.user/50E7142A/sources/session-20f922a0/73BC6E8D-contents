@@ -1,0 +1,523 @@
+require(mixtools)
+source("finite_mixture.R")
+# DP Normal Mixture Model
+set.seed(123)
+n <- 500
+ymix_norm <- rnormmix(n = n, lambda = c(0.6, rep(0.05, 8), 0.1),
+mu = seq(1, 20, by = 2), sigma = rep(1, 10))
+y <- ymix_norm
+plot(ecdf(y))
+grid <- seq(min(y) - 1, max(y) + 1, len = 200)
+ngrid <- length(grid)
+L <- 50
+
+fit_dp_gmm <- dp_gmm(y = y,grid = grid,L = L, amu =  0,
+                     b2mu = 0.01,asigma2 = 1,bsigma2 = 1,
+                     aalpha = 2,balpha =  2,n_iter = 5000,nburn = 500)
+K = 20
+fit_gmm <- gmm(y = y, grid = grid,  K = K, amu = 5, b2mu = 0.01, asigma2 = 1, 
+               bsigma2 = 1, alpha_dirichlet = rep(1, K), nsim = 5000, nburn = 1000)
+
+var(y)
+
+#normal gmm
+# fit_dp_gmm <- gmm(y = y,grid = grid,K = L, amu =  0, 
+#                      b2mu = 0.01,asigma2 = 1,bsigma2 = 1,
+#                   alpha_dirichlet = rep(1,L), nsim = 5000, nburn = 500)
+dp_gmm_dens <- fit_dp_gmm$density
+dp_gmm_dens <- fit_gmm$density
+fit_dp_gmm_samples <- as.matrix(fit_dp_gmm$samples)
+
+gmm_samples <- fit_gmm$samples
+ess_val_gmm <- effectiveSize(gmm_samples)
+mu_ess <- ess_val_gmm[grep("w", names(ess_val_gmm))]
+
+barplot(mu_ess,
+        las = 2,  # rotates parameter names for readability if they are long
+        main = "Effective Sample Size for Model Parameters",
+        ylab = "Effective Sample Size",
+        xlab = "Model Parameters",
+        col = "skyblue")
+
+
+# traceplot
+set.seed(123)
+random_index <- sample(1:ncol(dp_gmm_dens), 1)
+
+plot(dp_gmm_dens[, random_index], type = "l", 
+     main = paste("GMM (alpha = 0.1) Trace Plot on Simulated Data"),
+     xlab = "Iteration", ylab = "Density")
+
+#ESS
+# Calculate ESS for each grid point for the square root normal model
+ess_values_sqrt_norm <- apply(dp_gmm_dens, 2, coda::effectiveSize)
+
+# Plotting box plot
+boxplot(ess_values_sqrt_norm, main = "ESS across Grid Points for DP Normal Mixture on Simulated Data",
+        ylab = "Effective Sample Size (ESS)", col = "gray")
+abline(h = 500, col = "red", lty = 2)  # Threshold line for reference
+
+# Plot the ESS against grid
+plot(grid, ess_values_sqrt_norm, type = "l", col = "black", lwd = 2,
+     xlab = "Grid Points", ylab = "Effective Sample Size (ESS)",
+     main = "ESS across Grid Points for GMM (alpha = 1) on Data ")
+
+# Add dots at each grid point for ESS values
+points(grid, ess_values_sqrt_norm, pch = 16, col = "black")
+
+# Optional: add a horizontal line to indicate a threshold (e.g., ESS = 500)
+abline(h = 500, col = "red", lty = 2)
+
+
+w_samples_dp_gmm <- fit_dp_gmm_samples[, grep("^w\\[", colnames(fit_dp_gmm_samples))]
+mu_samples_dp_gmm <- fit_dp_gmm_samples[, grep("^mu\\[", colnames(fit_dp_gmm_samples))]
+tau_samples_dp_gmm <- fit_dp_gmm_samples[, grep("^tau\\[", colnames(fit_dp_gmm_samples))]
+alpha_samples_dp_gmm <- fit_dp_gmm_samples[, "alpha"]
+
+good_fit_dp_nm <- good_fit_criteria(y = y,P = w_samples_dp_gmm, Mu = mu_samples_dp_gmm,
+                                    Sigma2 = (1/tau_samples_dp_gmm), nburn = 1000)
+head(w_samples_dp_gmm)
+
+dp_nm_WAIC <- good_fit_dp_nm$WAIC
+dp_nm_LPML <- good_fit_dp_nm$LPML
+
+data.frame(Average_WAIC = dp_nm_WAIC, Average_LPML = dp_nm_LPML)
+ 
+#plot density overlay on hist dat
+dens3m <- apply(dp_gmm_dens, 2, mean)
+dens3l <- apply(dp_gmm_dens, 2, quantile, prob = 0.025)
+dens3h <- apply(dp_gmm_dens, 2, quantile, prob = 0.975)
+
+dfhist <- data.frame(y = y)
+dfdens3 <- data.frame(dm = dens3m, dl = dens3l, dh = dens3h,
+                      seqgrid = grid)
+library(ggplot2)
+#plot data, using data with normal mix model
+ggplot(dfdens3, aes(x = seqgrid, y = dm)) + geom_line(size = 1) +
+  geom_ribbon(data = dfdens3, aes(x = seqgrid, ymin = dl, ymax = dh),
+              alpha = 0.3, fill = "dodgerblue1") + xlab("y") + ylab("Density") + geom_histogram(data = dfhist, aes(x = y,
+                                                    y = after_stat(density)), alpha = 0.2, bins = 40, inherit.aes = FALSE,
+                                 fill = "gray", colour = "black") + theme(text = element_text(size = 20)) +
+  ggtitle("DP Normal Mix Model on Simulated Data") + theme(plot.title = element_text(hjust = 0.5))
+
+# updated plot using the same theme for DP
+ggplot(dfdens3, aes(x = seqgrid, y = dm)) + geom_line(size = 1, colour = "blue") +
+  geom_ribbon(data = dfdens3, aes(x = seqgrid, ymin = dl, ymax = dh),
+              alpha = 0.3, fill = "dodgerblue1") + xlab("y") + ylab("Density") + geom_histogram(data = dfhist, aes(x = y,
+                                                    y = after_stat(density)), alpha = 0.2, bins = 40, inherit.aes = FALSE,
+                                 fill = "gray", colour = "black") + theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), text = element_text(size = 15))
+
+#gmm plot new plot
+ggplot(dfdens3, aes(x = seqgrid, y = dm)) + geom_line(size = 1, colour = "blue") +
+  geom_ribbon(data = dfdens3, aes(x = seqgrid, ymin = dl, ymax = dh),
+              alpha = 0.3, fill = "dodgerblue1") + xlab("y") + ylab("Density") + geom_histogram(data = dfhist, aes(x = y,
+                                                    y = after_stat(density)), alpha = 0.2, bins = 40, inherit.aes = FALSE,
+                                 fill = "gray", colour = "black")+ theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), text = element_text(size = 15))
+
+
+
+#to plot weight for standard gmm
+fit_gmm_samples <- as.matrix(fit_gmm$samples)
+w_samples_20 <- fit_gmm_samples[, grep("^w\\[", colnames(fit_dp_gmm_samples))]
+# Assume w_samples_20 is a matrix/dataframe where rows are samples and columns are weight components
+set.seed(2333)  # For reproducibility
+random_sample <- sample(1:nrow(w_samples_20), 1)  # Select a random row index
+weights <- w_samples_20[random_sample, ]  # Extract weights for that sample
+
+# Using Base R
+plot(1:20, weights, type = "o", col = "blue", pch = 16, lwd = 2,
+     main = paste(""),
+     xlab = "Component", ylab = "Weight")
+
+# repeat experiment 20 times
+
+## generate data sets
+set.seed(123)
+num_datasets <- 20    # Number of datasets to generate
+n <- 500
+# Initialize a list to store each dataset
+datasets <- vector("list", num_datasets)
+
+# Generate 20 datasets with outliers and store them in the list
+for (i in 1:num_datasets) {
+  ymix_norm <- rnormmix(n = n, lambda = c(0.6, rep(0.05, 8), 0.1),
+                        mu = seq(1, 20, by = 2), sigma = rep(1, 10))
+  # Store the generated dataset in the list
+  datasets[[i]] <- ymix_norm
+}
+
+num_experiments <- length(datasets)  # Number of datasets (20 in this case)
+L <- 50  # Number of mixture components
+# Initialize vectors to store WAIC and LPML values for each experiment
+waic_values2 <- numeric(num_experiments)
+lpml_values2 <- numeric(num_experiments)
+
+# Loop through each dataset to fit the Gaussian mixture model and calculate good fit criteria
+for (i in 1:num_experiments) {
+  grid <- seq(min(datasets[[i]]) - 1, max(datasets[[i]]) + 1, len = 200)
+  # Fit the Gaussian mixture model on the current dataset
+  fit_dp_gmm <- dp_gmm(y = datasets[[i]],grid = grid,L = L, amu =  0, 
+                     b2mu = 0.01,asigma2 = 1,bsigma2 = 1, 
+                     aalpha = 2,balpha =  2,n_iter = 5000,nburn = 1000)
+  # Extract posterior samples for weights, means, and variances
+  samples_norm <- fit_dp_gmm$samples
+  samples_matrix_norm <- as.matrix(samples_norm)
+  
+  # Extract weights, means, and variances
+  w_samples <- samples_matrix_norm[, grep("w", colnames(samples_matrix_norm))]
+  mu_samples <- samples_matrix_norm[, grep("mu", colnames(samples_matrix_norm))]
+  tau_samples <- samples_matrix_norm[, grep("tau", colnames(samples_matrix_norm))]
+  sigma2_samples <- 1 / tau_samples
+  
+  # Calculate WAIC and LPML for the current experiment
+  ghc_norm <- good_fit_criteria(y = datasets[[i]], P = w_samples, Mu = mu_samples, 
+                                Sigma2 = sigma2_samples, nburn = 1000)
+  
+  # Store the WAIC and LPML values
+  waic_values2[i] <- ghc_norm$WAIC
+  lpml_values2[i] <- ghc_norm$LPML
+}
+
+# Calculate the average WAIC and LPML across all experiments
+average_waic2 <- mean(waic_values2)
+average_lpml2 <- mean(lpml_values2)
+
+data.frame(Average_WAIC = average_waic2, Average_LPML = average_lpml2)
+
+
+
+#----------------------------------------------------------------------------#
+# DP mixture of Poisson
+source("finite_mixture.R")
+
+set.seed(123)
+n <- 500
+y_van <- numeric(n)
+u <- runif(n)
+for(i in 1:n){
+if(u[i] < 0.4) {y_van[i] <- rpois(1, lambda = 2)} 
+else
+  if(u[i] < 0.8) {y_van[i] <- rpois(1, lambda = 6)}
+   else {y_van[i] <- rpois(1, lambda = 10)}
+}
+obs_data <- y_van
+
+L = 50
+K = 50
+#grid <- seq(min(obs_data) - 1, max(obs_data) + 1, length = 200)
+grid <- seq(min(obs_data) - 1, max(obs_data) + 1, by = 1)
+res_pois <- dp_pmm_nimble(y = obs_data, grid = grid, L = L, 
+                      alambda = 1, blambda = 1, aalpha = 1, 
+                      balpha =1, n_iter = 5000, nburn = 1000)
+density_pmm <- res_pois$density 
+set.seed(123)  # For reproducibility
+random_index <- sample(1:ncol(density_pmm), 1)
+# Plot the trace of the density at this selected grid point
+plot(density_pmm[, random_index], type = "l", 
+     main = paste("DP Poisson Mixture Model Trace Plot on Over-dispersed Data"),
+     xlab = "Iteration", ylab = "Density")
+
+#ESS
+ess_values <- apply(density_pmm, 2, coda::effectiveSize)
+
+# Plot ESS against the grid points as a line
+plot(grid[grid >=0], ess_values[grid >=0], type = "l", col = "black", lwd = 2,
+     xlab = "Grid Points", ylab = "Effective Sample Size (ESS)",
+     main = "ESS across Grid Points for DP PMM on Overdispersed Data", cex.main = 1.1)
+
+# Add dots at each grid point for ESS values
+points(grid[grid >=0], ess_values[grid >=0], pch = 16, col = "black")
+
+# Optional: add a horizontal line to indicate a threshold (e.g., ESS = 500)
+abline(h = 500, col = "red", lty = 2)
+
+#density plot
+
+mean_density <- apply(density_pmm, 2, mean) # Taking mean over each column (1x200)
+lower_density <- apply(density_pmm, 2, quantile, prob = 0.025)
+upper_density <- apply(density_pmm, 2, quantile, prob = 0.975)
+
+obs_density <- table(factor(obs_data, levels = grid)) / length(obs_data)  # Calculate density for observed data
+y_max <- max(c(mean_density, obs_density)) * 1  # Set the max y limit slightly above the max density
+
+# Plot the mean density using type = "h" for vertical lines (no offset)
+plot(grid[grid >=0], mean_density[grid >=0], type = "h", lwd = 2, col = "gray",
+     xlab = "y", ylab = "Density", ylim = c(0, y_max),
+     main = "DP Poisson Mix Model on Over-dispersed Data")
+
+# Add shaded area for the 95% credible interval
+polygon(c(grid[grid >=0], rev(grid[grid >=0])),
+        c(lower_density[grid >=0], rev(upper_density[grid >=0])),
+        col = rgb(30/255, 144/255, 255/255, 0.3), border = NA)
+
+# Overlay the observed data as a dotted vertical line density plot, shifted by 'offset'
+offset <- 0.1  # Small offset for side-by-side display
+obs_density <- table(factor(obs_data, levels = grid)) / length(obs_data)  # Calculate density for observed data
+points(grid + offset, obs_density, type = "h", lwd = 2, col = "black", lty = 3)  # Use type "h" with dotted line
+
+# Add a legend to indicate each element
+legend("topright", legend = c("Mean Density", "95% CI", "Observed Data"),
+       col = c("gray", rgb(0, 0, 1, 0.2), "black"), lty = c(1, NA, 3),
+       lwd = c(2, NA, 2), fill = c(NA, rgb(30/255, 144/255, 255/255, 0.3), NA), border = NA)
+
+
+
+# Repeat experiment 20 times for DP Pois mixture
+set.seed(123)
+num_datasets2 <- 20    # Number of datasets to generate
+n <- 500
+# Initialize a list to store each dataset
+datasets_pois <- vector("list", num_datasets2)
+
+# Generate 20 datasets with outliers and store them in the list
+for (l in 1:num_datasets2) {
+  y_van <- numeric(n)
+  u <- runif(n)
+  for(i in 1:n){
+    if(u[i] < 0.4) {y_van[i] <- rpois(1, lambda = 2)} 
+    else
+      if(u[i] < 0.8) {y_van[i] <- rpois(1, lambda = 6)}
+        else {y_van[i] <- rpois(1, lambda = 10)}
+  }
+  datasets_pois[[l]] <- y_van
+}
+
+num_experiments_pois <- length(datasets_pois)  # Number of datasets (20 in this case)
+L <- 50  # Number of mixture components
+# Initialize vectors to store WAIC and LPML values for each experiment
+waic_values_pois <- numeric(num_experiments_pois)
+lpml_values_pois <- numeric(num_experiments_pois)
+
+# Loop through each dataset to fit the Gaussian mixture model and calculate good fit criteria
+for (i in 1:num_experiments_pois) {
+  grid_pois <- seq(min(datasets_pois[[i]]) - 1, max(datasets_pois[[i]]) + 1, by = 1)
+  # Fit the Gaussian mixture model on the current dataset
+  fit_dp_pmm <- dp_pmm_nimble(y = datasets_pois[[i]], grid = grid_pois, L = L, 
+                      alambda = 1, blambda = 1, aalpha = 1, 
+                      balpha =1, n_iter = 5000, nburn = 1000)
+  # Extract posterior samples for weights, means, and variances
+  samples_pois <- fit_dp_pmm$samples
+  samples_matrix_pois <- as.matrix(samples_pois)
+  
+  # Extract weights, lambda
+  w_samples_pois <- samples_matrix_pois[, grep("w", colnames(samples_matrix_pois))]
+  lambda_samples <- samples_matrix_pois[, grep("lambda", colnames(samples_matrix_pois))]
+  
+  # Calculate WAIC and LPML for the current experiment
+  ghc_pois <- good_fit_criteria_pois(y = datasets_pois[[i]], P = w_samples_pois, Lambda = lambda_samples, 
+                                nburn = 1000)
+  
+  # Store the WAIC and LPML values
+  waic_values_pois[i] <- ghc_pois$WAIC
+  lpml_values_pois[i] <- ghc_pois$LPML
+}
+
+# Calculate the average WAIC and LPML across all experiments
+average_waic_pois <- mean(waic_values_pois)
+average_lpml_pois <- mean(lpml_values_pois)
+data.frame(Average_WAIC = average_waic_pois , Average_LPML = average_lpml_pois)
+
+
+#----------------------------------------------------------------------------#
+#DP of Student t mixture
+set.seed(123)
+# Parameters for the main normal distribution
+N <- 100
+mu <- 3
+sigma <- 1.15
+
+# Generate main normal data
+y <- rnorm(N, mu, sigma)
+
+# Proportion of outliers and amount of shift for outliers
+prop_outliers <- 0.1  # Higher proportion of outliers for heavier tails
+shift <- 20           # Larger shift for more extreme outliers
+t_df <- 3             # Degrees of freedom for t-distribution (heavier tails)
+
+# Determine number of outliers
+n_outliers <- round(N * prop_outliers)
+
+# Select indices for outliers
+ind_outliers <- sample(1:N, size = n_outliers)
+
+# Initialize outlier-adjusted data
+y_outliers <- numeric(N)
+
+# Assign non-outlier data
+y_outliers[1:(N - length(ind_outliers))] <- y[-ind_outliers]
+
+# Assign outliers using a t-distribution for heavy tails and add shift
+y_outliers[(N - length(ind_outliers) + 1):N] <- rt(n_outliers, df = t_df) * sigma + mu + shift
+
+# Final data with outliers and heavier tails
+y_data <- y_outliers
+
+K =50
+L = 50
+grid <- seq(min(y_data) - 1, max(y_data) + 1, length.out = 200)
+
+tmix_sample <- DP_tmix_nimble(y_data, grid = grid, L = L, amu = 0, b2mu = 0.01,
+                           asigma2 = 1, bsigma2 = 1, rate_nu = 0.1, aalpha = 1, balpha = 1,
+                           n_iter = 5000, nburn = 1000)
+
+# tmix_sample <- tmix_nimble(y_data, grid = grid, K = K, amu = 0, b2mu = 0.01,
+#                            asigma2 = 1, bsigma2 = 1, rate_nu = 0.1, alpha_dirichlet = rep(1,K),
+#                            nsim = 5000, nburn = 1000)
+
+samples_t_mixture <- tmix_sample$samples
+sample_t_dens <- tmix_sample$density
+
+#traceplots
+set.seed(123)
+random_index <- sample(1:ncol(sample_t_dens), 1)
+
+random_index
+
+plot(sample_t_dens[, random_index], type = "l", 
+     main = paste("DP t Mixture Model Trace Plot on Simulated Data (10% Outliers)"),
+     xlab = "Iteration", ylab = "Density")
+#ess plots
+# Calculate ESS for each grid point
+ess_values <- apply(sample_t_dens, 2, coda::effectiveSize)
+
+# Plotting box plot
+boxplot(ess_values, main = "ESS across Grid Points for DP t mix  on Heavy Tail Data (10%)",
+        ylab = "Effective Sample Size (ESS)", col = "gray")
+abline(h = 100, col = "red", lty = 2)  # Threshold line for reference
+
+# Plot ess against grid points
+plot(grid, ess_values, type = "l", col = "black", lwd = 2,
+     xlab = "Grid Points", ylab = "Effective Sample Size (ESS)",
+     main = "ESS across Grid Points for DP tMix on Data (10% Outliers) ")
+
+# Add dots at each grid point for ESS values
+points(grid, ess_values, pch = 16, col = "black")
+
+# Optional: add a horizontal line to indicate a threshold (e.g., ESS = 500)
+abline(h = 500, col = "red", lty = 2)
+
+# Density
+density <- sample_t_dens
+head(density)
+length(density)
+mean_density <- apply(density, 2, mean)
+lower_density <- apply(density, 2, quantile, prob = 0.025)
+upper_density <- apply(density, 2, quantile, prob = 0.975)
+
+# Create a data frame for the densities
+density_df <- data.frame(grid = grid, 
+                         mean_density = mean_density, 
+                         lower_density = lower_density, 
+                         upper_density = upper_density)
+
+# Create a data frame for the histogram
+df_hist <- data.frame(y = y_data)
+
+ggplot() + 
+  geom_histogram(data = df_hist, aes(x = y, y = after_stat(density)), bins = 40, alpha = 0.3, fill = "gray", color = "black") +
+  geom_line(data = density_df, aes(x = grid, y = mean_density), color = "blue", size = 1) + 
+  geom_ribbon(data = density_df, aes(x = grid, ymin = lower_density, ymax = upper_density), alpha = 0.3, fill = "dodgerblue") +
+  geom_rug(data = df_hist, aes(x = y), sides = "b", color = "darkblue", alpha = 0.7) + 
+  xlab("y") + 
+  ylab("Density") + 
+  ggtitle("DP t mix Model on Simulated Data (10% Outliers)") + 
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 18))
+
+# Using updated theme for plotting density against the data
+
+ggplot() + 
+  geom_histogram(data = df_hist, aes(x = y, y = after_stat(density)), bins = 40, alpha = 0.3, fill = "gray", color = "black") +
+  geom_line(data = density_df, aes(x = grid, y = mean_density), color = "blue", size = 1) + 
+  geom_ribbon(data = density_df, aes(x = grid, ymin = lower_density, ymax = upper_density), alpha = 0.3, fill = "dodgerblue") +
+  geom_rug(data = df_hist, aes(x = y), sides = "b", color = "darkblue", alpha = 0.7) + 
+  xlab("y") + 
+  ylab("Density") + 
+  theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), text = element_text(size = 15))
+
+# Repeat experiment 20 times for DP t mix
+source("finite_mixture.R")
+set.seed(123)
+# Parameters for the main normal distribution
+N <- 100
+mu <- 3
+sigma <- 1.15
+prop_outliers <- 0.05  # Higher proportion of outliers for heavier tails
+shift <- 20           # Larger shift for more extreme outliers
+t_df <- 3             # Degrees of freedom for t-distribution (heavier tails)
+num_datasets <- 20    # Number of datasets to generate
+
+# Initialize a list to store each dataset
+datasets <- vector("list", num_datasets)
+
+# Generate 20 datasets with outliers and store them in the list
+for (i in 1:num_datasets) {
+  # Generate the main normal data
+  y <- rnorm(N, mu, sigma)
+  
+  # Determine the number of outliers
+  n_outliers <- round(N * prop_outliers)
+  
+  # Select indices for outliers randomly
+  ind_outliers <- sample(1:N, size = n_outliers)
+  
+  # Initialize outlier-adjusted data
+  y_outliers <- numeric(N)
+  
+  # Assign non-outlier data
+  y_outliers[1:(N - length(ind_outliers))] <- y[-ind_outliers]
+  
+  # Assign outliers using a t-distribution for heavy tails and add shift
+  y_outliers[(N - length(ind_outliers) + 1):N] <- rt(n_outliers, df = t_df) * sigma + mu + shift
+  
+  # Store the generated dataset in the list
+  datasets[[i]] <- y_outliers
+}
+
+# looping 20 times.
+# Set parameters
+num_experiments <- length(datasets)  # Number of datasets (20 in this case)
+L <- 50  # Number of mixture components
+
+# head(datasets)
+# Initialize vectors to store WAIC and LPML values for each experiment
+waic_values <- numeric(num_experiments)
+lpml_values <- numeric(num_experiments)
+
+# Loop through each dataset to fit the t-mixture model and calculate good fit criteria
+for (i in 1:num_experiments) {
+  grid <- seq(min(datasets[[i]]) - 1, max(datasets[[i]]) + 1, len = 200) 
+  # Fit the t-mixture model on the current dataset
+  tmix_sample <- DP_tmix_nimble(datasets[[i]], grid = grid, L = L, amu = 0, b2mu = 0.01,
+                           asigma2 = 1, bsigma2 = 1, rate_nu = 0.1, aalpha = 1, balpha = 1,
+                           n_iter = 5000, nburn = 1000)
+  
+  # Extract posterior samples
+  samples_t_mixture <- tmix_sample$samples
+  samples_matrix_t_mixture <- as.matrix(samples_t_mixture)
+  
+  # Extract weights, means, variances, and degrees of freedom samples
+  w_samples_t <- samples_matrix_t_mixture[, grep("w", colnames(samples_matrix_t_mixture))]
+  mu_samples_t <- samples_matrix_t_mixture[, grep("mu", colnames(samples_matrix_t_mixture))]
+  tau_samples_t <- samples_matrix_t_mixture[, grep("tau", colnames(samples_matrix_t_mixture))]
+  df_samples_t <- samples_matrix_t_mixture[, grep("nu", colnames(samples_matrix_t_mixture))]
+  sigma2_samples_t <- 1 / tau_samples_t
+  
+  # Calculate WAIC and LPML for the current experiment
+  ghc_t <- good_fit_criteria_t(y = datasets[[i]], P = w_samples_t, Mu = mu_samples_t,
+                               Sigma2 = sigma2_samples_t, df_samples = df_samples_t, nburn = 1000)
+  
+  # Store the WAIC and LPML values
+  waic_values[i] <- ghc_t$WAIC
+  lpml_values[i] <- ghc_t$LPML
+}
+
+# Calculate the average WAIC and LPML across all experiments
+average_waic <- mean(waic_values)
+average_lpml <- mean(lpml_values)
+
+# Print results
+data.frame(Average_WAIC = average_waic, Average_LPML = average_lpml)
