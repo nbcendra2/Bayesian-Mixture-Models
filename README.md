@@ -3,7 +3,7 @@
 This repository contains R implementations of various Bayesian mixture models, along with experimental scripts for evaluating their performance in different data scenarios. The models are implemented using NIMBLE and JAGS, facilitating flexible Bayesian inference.
 
 ## Repository Structure
-
+```bash
 .
 ├── code/
 │   ├── Bayes_lddp_var.R        # Covariate-dependent variance LDDP model
@@ -13,14 +13,13 @@ This repository contains R implementations of various Bayesian mixture models, a
 │   ├── Bayes_mix_student_t.R   # Student-t Mixture Model
 │
 ├── experiments/
-│   ├── ex1/          # Experiment 1: Overfitted Mixtures
-│   ├── ex2/          # Experiment 2: Poisson Mixture Model
-│   ├── ex3/          # Experiment 3: Student-t Mixture Model
+│   ├── ex1/          # Experiment 1: Priors of Overfitted Mixtures
+│   ├── ex2/          # Experiment 2: Over-dispersed Data
+│   ├── ex3/          # Experiment 3: Under-dispersed Data
 │   ├── ex4/          # Experiment 4: Heavy-Tailed Data
 │   ├── ex_DP/        # Experiment on Dirichlet Process Mixtures
 │   ├── ex_covariate/ # Experiment on Covariate-Dependent Mixtures
 │
-├── data/      # Any required datasets (if applicable)
-├── results/   # Processed results and figures
 └── README.md  # Project overview
+```
 
