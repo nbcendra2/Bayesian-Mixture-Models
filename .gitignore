@@ -2,3 +2,6 @@ Bayes_mix.Rproj
 .DS_Store
 .Rproj.user/
 .RDataTmp
+.RData
+.Rhistory
+Bayes_mix.Rproj
