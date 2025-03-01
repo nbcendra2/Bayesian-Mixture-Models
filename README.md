@@ -23,3 +23,6 @@ This repository contains R implementations of various Bayesian mixture models, a
 └── README.md  # Project overview
 ```
 
+## Setup
+Before running the models, ensure that NIMBLE and RJAGS are installed on your system.
+
