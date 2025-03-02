@@ -92,7 +92,7 @@ ggplot(df_lddp_ex2, aes(x = x))+ geom_line(aes(y = true_y), color = "black") +
   labs(
      x = "x1", 
      y = "E(Y | x)") + theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 8)
 
 #waic and lpml
 samples_res_ex2 <- list(z = fit_lddp$z_samples,
@@ -137,7 +137,7 @@ ggplot(df_lddp_ex2_var, aes(x = x))+ geom_line(aes(y = true_var), color = "black
   geom_ribbon(aes(ymin = lower_var, ymax = upper_var), fill = "dodgerblue", alpha = 0.3) + labs(
      x = "x1", 
      y = "Var(Y | x)") + theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 8)
 
 
 # -------------------
@@ -183,7 +183,7 @@ ggplot(df_lddp_ex20, aes(x = x))+ geom_line(aes(y = true_y), color = "black") +
   labs(
      x = "x1", 
      y = "E(Y | x)") + theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))  
+panel.grid.minor = element_blank(), text = element_text(size = 15))   + ylim(NA, 8)
 
 #waic and lpml
 samples_res_ex20 <- list(z = fit_lddp0$z_samples,
@@ -215,7 +215,7 @@ ggplot(df_lddp_ex20_var, aes(x = x))+ geom_line(aes(y = true_var), color = "blac
   geom_ribbon(aes(ymin = lower_var, ymax = upper_var), fill = "dodgerblue", alpha = 0.3) + labs(
      x = "x1", 
      y = "Var(Y | x)") + theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 8)
 
 
 # -------------------
@@ -260,7 +260,7 @@ ggplot(df_lddp_ex25, aes(x = x))+ geom_line(aes(y = true_y), color = "black") +
   labs(
      x = "x1", 
      y = "E(Y | x)") + theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 8)
 
 #waic and lpml
 samples_res_ex25 <- list(z = fit_lddp5$z_samples,
@@ -292,6 +292,6 @@ ggplot(df_lddp_ex25_var, aes(x = x))+ geom_line(aes(y = true_var), color = "blac
   geom_ribbon(aes(ymin = lower_var, ymax = upper_var), fill = "dodgerblue", alpha = 0.3) + labs(
      x = "x1", 
      y = "Var(Y | x)") + theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 4)
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 8)
 
                                                                                      

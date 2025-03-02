@@ -104,7 +104,7 @@ ggplot(df_lddp_ex2_v, aes(x = x))+ geom_line(aes(y = true_y), color = "black") +
   labs(
      x = "x1", 
      y = "E(Y | x)") + theme_bw(base_size = 15)+ theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15)) 
+panel.grid.minor = element_blank(), text = element_text(size = 15))  + ylim(NA, 8)
 
 #waic and lpml
 samples_res_ex2_v <- list(z = fit_lddp_v$z_samples,
@@ -197,7 +197,7 @@ ggplot(df_lddpbs0_ex2_v, aes(x = x))+ geom_line(aes(y = true_y), color = "black"
   labs(
      x = "x1", 
      y = "E(Y | x)") + theme_bw(base_size = 15)+ theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 8)
 
 
 #waic and lpml
@@ -291,7 +291,7 @@ ggplot(df_lddp_ex25, aes(x = x))+ geom_line(aes(y = true_y), color = "black") +
   labs(
      x = "x1", 
      y = "E(Y | x)") + theme_bw(base_size = 15)+ theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 8)
 
 # waic and lpml for cov dependent var
 samples_res_v <- list(z = fit_lddp5$z_samples,
@@ -336,4 +336,4 @@ ggplot(df_lddp_ex25_var, aes(x = x))+ geom_line(aes(y = true_var), color = "blac
   geom_ribbon(aes(ymin = lower_var, ymax = upper_var), fill = "dodgerblue", alpha = 0.3) + labs(
      x = "x1", 
      y = "Var(Y | x)") + theme_bw(base_size = 15)+ theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 8)

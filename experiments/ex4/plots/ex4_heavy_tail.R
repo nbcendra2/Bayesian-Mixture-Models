@@ -38,10 +38,10 @@ y_data <- y_outliers
 # Student-t Mixture Models
 # -------------------------------------------------
 K =20
-alpha = 1
+alpha = 0.1
 grid <- seq(min(y_data) - 1, max(y_data) + 1, length.out = 200)
 tmix_sample <- tmix_nimble(y_data, grid = grid, K = K, amu = 0, b2mu = 0.01, 
-                           asigma2 = 1, bsigma2 = 1, rate_nu = 0.1, alpha_dirichlet = rep(alpha,K),
+                           asigma2 = 2, bsigma2 = 2, rate_nu = 0.1, alpha_dirichlet = rep(alpha,K),
                             nsim = 5000, nburn = 1000)
 samples_t_mixture <- tmix_sample$samples
 sample_t_dens <- tmix_sample$density
@@ -81,14 +81,14 @@ ggplot() +
   xlab("y") + 
   ylab("Density") + 
   theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15)) + ylim(NA, 0.43)
 
 
 # -------------------------------------------------
 # Gaussian Mixture Models
 # -------------------------------------------------
-K =20
-alpha = 1
+K =50
+alpha = 0.1
 fit_norm <- gmm(y = y_data, grid = grid, K = 20, amu = 0, b2mu = 0.01, asigma2 = 0.1,
             bsigma2 = 1, alpha = rep(alpha, 20), nsim = 5000, nburn = 1000)
 
@@ -116,4 +116,4 @@ ggplot() +
   xlab("y") + 
   ylab("Density")+ 
   theme_bw(base_size = 15) + theme(plot.title = element_text(hjust = 0.5, face="bold"),panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), text = element_text(size = 15))
+panel.grid.minor = element_blank(), text = element_text(size = 15))+ ylim(NA, 0.43)
