@@ -37,7 +37,7 @@ y_data <- y_outliers
 # -------------------------------------------------
 # Student-t Mixture Models
 # -------------------------------------------------
-K =20
+K =50
 alpha = 0.1
 grid <- seq(min(y_data) - 1, max(y_data) + 1, length.out = 200)
 tmix_sample <- tmix_nimble(y_data, grid = grid, K = K, amu = 0, b2mu = 0.01, 
@@ -106,8 +106,10 @@ dens3l <- apply(fit_norm$density, 2, quantile, prob = 0.025)
 dens3h <- apply(fit_norm$density, 2, quantile, prob = 0.975)
 
 df_hist <- data.frame(y = y_data)
-dfdens3 <- data.frame(dm = dens3m, dl = dens3l, dh = dens3h,
-                      seqgrid = grid)
+density_df <- data.frame(grid = grid, 
+                         mean_density = dens3m, 
+                         lower_density = dens3l, 
+                         upper_density = dens3h)
 ggplot() + 
   geom_histogram(data = df_hist, aes(x = y, y = after_stat(density)), bins = 40, alpha = 0.3, fill = "gray", color = "black") +
   geom_line(data = density_df, aes(x = grid, y = mean_density), color = "blue", size = 1) + 
