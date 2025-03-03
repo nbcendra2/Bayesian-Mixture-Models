@@ -69,19 +69,19 @@ lddp_var <- function(y, X, prior, nburn = 1000, niter = 5000, thin = 1, n_chains
   
   # Prepare data for JAGS
   data_list <- list(
-    n = length(y),           # Obs
-    L = prior$L,             # Num of upper bound comp
-    P = ncol(X),             # Num of predictors
-    y = y,                   # Response variable
-    x = X,                   # Desgn matrix
+    n = length(y),           
+    L = prior$L,             
+    P = ncol(X),             
+    y = y,                   
+    x = X,                  
     agamma = prior$a,       
     bgamma = prior$b,       
-    amu = prior$m0,          # Mean vector for beta coefficients
-    b2mu = solve(prior$S0),         # Precision matrix for beta coefficients -> perlu di inverse? 
-    psi = prior$Psi,         # Scale matrix for Wishart prior
-    nu = prior$nu,           # Degrees of freedom for Wishart prior
-    aalpha = prior$aalpha,   # Shape parameter for Gamma prior on alpha
-    balpha = prior$balpha    # Rate parameter for Gamma prior on alpha
+    amu = prior$m0,          
+    b2mu = solve(prior$S0),     # b2mu as inverse covariance matrix   
+    psi = prior$Psi,         
+    nu = prior$nu,           
+    aalpha = prior$aalpha,   
+    balpha = prior$balpha    
   )
   
   # MCMC configuration
@@ -225,10 +225,10 @@ constants <- list(
   inits <- list(
   beta = array(0, dim = c(L, P)),
   gamma = array(0, dim = c(L, P)),
-  z = sample(1:L, n, replace = TRUE)  # Random initialization for z
+  z = sample(1:L, n, replace = TRUE)  
   )
 
-  # MCMC confg
+  # MCMC config
   mcmc_config <- list(
     nburn = nburn,
     niter = niter,
@@ -276,12 +276,12 @@ constants <- list(
   
   # return list
   result <- list(
-    mcmc_samples = samples_mcmc,    # Full coda mcmc object
-    w_samples = w_samples,          # Matrix of w samples
-    beta_samples = beta_3d,         # 3D array of beta samples
-    gamma_samples = gamma_3d,       # Matrix of tau samples
-    alpha_samples = alpha_samples,  # matrix of alpha samples
-    z_samples = z_samples           # Matrix of z samples
+    mcmc_samples = samples_mcmc,    
+    w_samples = w_samples,          
+    beta_samples = beta_3d,         
+    gamma_samples = gamma_3d,       
+    alpha_samples = alpha_samples,  
+    z_samples = z_samples
   )  
   
   return(result)
