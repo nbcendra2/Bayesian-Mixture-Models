@@ -1,4 +1,6 @@
 source("code/Bayes_mix_poisson.R")
+source("code/Bayes_mix_normal.R")
+require(ggplot2)
 require(coda)
 require(rjags)
 
@@ -45,6 +47,8 @@ density_df <- data.frame(
 )
 
 # plot
+offset <- 0.1
+obs_density <- table(factor(obs_data, levels = grid)) / length(obs_data) 
 y_max <- max(c(mean_density, obs_density)) * 1
 plot(grid, mean_density, type = "h", lwd = 2, col = "gray",
      xlab = "y", ylab = "Density", ylim = c(0, y_max),
@@ -54,8 +58,6 @@ plot(grid, mean_density, type = "h", lwd = 2, col = "gray",
 polygon(c(grid, rev(grid)),
         c(lower_density, rev(upper_density)),
         col = rgb(30/255, 144/255, 255/255, 0.3), border = NA)
-offset <- 0.1
-obs_density <- table(factor(obs_data, levels = grid)) / length(obs_data) 
 points(grid + offset, obs_density, type = "h", lwd = 2, col = "black", lty = 3)  
 legend("topright", legend = c("Mean Density", "95% CI", "Observed Data"),
        col = c("gray", rgb(0, 0, 1, 0.2), "black"), lty = c(1, NA, 3),
