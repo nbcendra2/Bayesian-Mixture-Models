@@ -68,7 +68,7 @@ results_df <- data.frame(
 # Inspect the results
 print(results_df)
 
-write.csv(results_df, file = "/Users/nigelcendra/Documents/UoE/SemesterA_2024-2025/Dissertation/experiments/Overfitted_mix/alpha01/experiment_overfitted_results_k3.csv", row.names = FALSE)
+write.csv(results_df, file = "experiments/Overfitted_mix/alpha01/experiment_overfitted_results_k3.csv", row.names = FALSE)
 
 # Print results
 summary <- data.frame(Average_WAIC = average_waic2, Average_LPML = average_lpml2,
@@ -77,4 +77,4 @@ summary <- data.frame(Average_WAIC = average_waic2, Average_LPML = average_lpml2
 # Inspect the results
 print(summary)
 
-write.csv(summary, file = "/Users/nigelcendra/Documents/UoE/SemesterA_2024-2025/Dissertation/experiments/Overfitted_mix/alpha01/experiment_overfitted_summary_k3.csv", row.names = FALSE)
+write.csv(summary, file = "experiments/Overfitted_mix/alpha01/experiment_overfitted_summary_k3.csv", row.names = FALSE)
