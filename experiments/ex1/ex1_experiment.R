@@ -20,7 +20,7 @@ for (i in 1:num_datasets) {
 }
 
 num_experiments <- length(datasets)  # Number of datasets (20 in this case)
-K <- 20  # Number of mixture components, K = 20, 40, 50
+K <- 3  # Number of mixture components, K = 20, 40, 50
 # Initialize vectors to store WAIC and LPML values for each experiment
 waic_values2 <- numeric(num_experiments)
 lpml_values2 <- numeric(num_experiments)
@@ -29,7 +29,7 @@ lpml_values2 <- numeric(num_experiments)
 for (i in 1:num_experiments) {
   grid <- seq(min(datasets[[i]]) - 1, max(datasets[[i]]) + 1, len = 200)
   # Fit the Gaussian mixture model on the current dataset
-  fit_norm <- gmm_nimble(y = datasets[[i]], grid = grid, K = K, amu = 5, b2mu = 0.010, 
+  fit_norm <- gmm(y = datasets[[i]], grid = grid, K = K, amu = 5, b2mu = 0.010, 
                   asigma2 = 1, bsigma2 = 1, alpha_dirichlet = rep(0.1, K), nsim = 5000, nburn = 1000)
     # fit_norm <- gmm_nimble(y = datasets[[i]], grid = grid, K = K, amu = 5, b2mu = 0.010, 
     #               asigma2 = 1, bsigma2 = 1, alpha = rep(1, K), nsim = 5000, nburn = 1000)
@@ -68,7 +68,7 @@ results_df <- data.frame(
 # Inspect the results
 print(results_df)
 
-write.csv(results_df, file = "experiments/Overfitted_mix/alpha1/experiment_overfitted_results_k50.csv", row.names = FALSE)
+write.csv(results_df, file = "/Users/nigelcendra/Documents/UoE/SemesterA_2024-2025/Dissertation/experiments/Overfitted_mix/alpha01/experiment_overfitted_results_k3.csv", row.names = FALSE)
 
 # Print results
 summary <- data.frame(Average_WAIC = average_waic2, Average_LPML = average_lpml2,
@@ -77,4 +77,4 @@ summary <- data.frame(Average_WAIC = average_waic2, Average_LPML = average_lpml2
 # Inspect the results
 print(summary)
 
-write.csv(summary, file = "experiments/Overfitted_mix/alpha1/experiment_overfitted_summary_k50.csv", row.names = FALSE)
+write.csv(summary, file = "/Users/nigelcendra/Documents/UoE/SemesterA_2024-2025/Dissertation/experiments/Overfitted_mix/alpha01/experiment_overfitted_summary_k3.csv", row.names = FALSE)

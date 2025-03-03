@@ -268,7 +268,7 @@ samples_res_ex25 <- list(z = fit_lddp5$z_samples,
                     Beta = fit_lddp5$beta_samples,
                     Sigma2 = 1/fit_lddp5$tau_samples)
 
-waic_lddp_ex25 <- waicnp(y, X5, res = samples_res_ex25, L = 20, termsum = NULL)
+waic_lddp_ex25 <- xwaicnp(y, X5, res = samples_res_ex25, L = 20, termsum = NULL)
 waic_lddp_ex25 #52.478
 
 lpml_lddp_ex25 <- lpml(y,X5,res = samples_res_ex25, L = 20, termsum = NULL)
