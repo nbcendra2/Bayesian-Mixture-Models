@@ -31,5 +31,8 @@ Before running the models, ensure that NIMBLE and RJAGS are installed on your sy
 install.packages("rjags")
 ```
 
+
+# Install rjags
+
 For instructions on installing NIMBLE, please follow the official guide here:
 🔗 https://r-nimble.org/html_manual/cha-installing-nimble.html
