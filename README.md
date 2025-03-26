@@ -32,7 +32,7 @@ install.packages("rjags")
 ```
 
 
-# Install rjags
+# Install NIMBLE
 
 For instructions on installing NIMBLE, please follow the official guide here:
 🔗 https://r-nimble.org/html_manual/cha-installing-nimble.html
